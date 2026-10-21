@@ -1,69 +1,175 @@
-import Image from "next/image";
 
-export default function Home() {
+"use client"
+
+import React, { useState, useEffect, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, useProgress, ContactShadows } from '@react-three/drei'
+import FoxModel from '@/components/FoxsIslands'
+import Loader from '@/components/Loader'
+import PopUp from '@/components/PopUp'
+import Cloud from '@/components/Cloud'
+import Plane from '@/components/Plane'
+import WelcomeModal from "@/components/WelcomeModal.jsx"
+
+
+export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSmallSize, setIsSmallSize] = useState(false);
+  const [showNewComponent, setShowNewComponent] = useState(null);
+  const [isRotating, setIsRotating] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const rotationTimeout = useRef(null);
+  const controlsRef = useRef();
+
+  const triggerRotationFeedback = () => {
+    setIsRotating(true);
+    if (rotationTimeout.current) clearTimeout(rotationTimeout.current);
+    rotationTimeout.current = setTimeout(() => {
+      setIsRotating(false);
+    }, 150);
+  };
+
+  const handleOrbitChange = (e) => {
+    setIsRotating(true);
+
+    // Clear any existing timeout
+    if (rotationTimeout.current) clearTimeout(rotationTimeout.current);
+
+    // Set the plane to stop animating 150ms after the user stops dragging
+    rotationTimeout.current = setTimeout(() => {
+      setIsRotating(false);
+    }, 150);
+
+    const angle = e.target.getAzimuthalAngle();
+
+    const zones = [
+      { min: -Math.PI, max: -2.35, component: "Main Site" },
+      { min: -1.56, max: -0.39, component: "Contact" },
+      { min: 0.4, max: 1.18, component: "About" },
+    ];
+
+    const zone = zones.find(
+      ({ min, max }) => angle >= min && angle < max
+    );
+
+    setShowNewComponent(zone ? zone.component : null);
+  };
+
+  useEffect(() => {
+    const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
+
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Function to check screen width (e.g., standard mobile breakpoint is 768px)
+    const checkScreenSize = () => {
+      setIsSmallSize(window.innerWidth < 1200);
+    };
+
+    // Check on initial load
+    checkScreenSize();
+
+    // Add event listener for window resizing
+    window.addEventListener("resize", checkScreenSize);
+
+    // Clean up the event listener when component unmounts
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Handle Keyboard Arrow Press Events
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!controlsRef.current) return;
+
+      const step = 0.1; // Speed of rotation per key press
+
+      if (e.key === "ArrowLeft") {
+        controlsRef.current.autoRotate = false;
+        // Adjust the orbital angle or rotate the spherical coordinates
+        controlsRef.current.setAzimuthalAngle(controlsRef.current.getAzimuthalAngle() - step);
+        controlsRef.current.update();
+        triggerRotationFeedback();
+      } else if (e.key === "ArrowRight") {
+        controlsRef.current.autoRotate = false;
+        controlsRef.current.setAzimuthalAngle(controlsRef.current.getAzimuthalAngle() + step);
+        controlsRef.current.update();
+        triggerRotationFeedback();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="relative w-screen h-[100dvh]">
+
+      {showWelcome && (
+        <WelcomeModal
+          onClose={() => {
+            sessionStorage.setItem("hasSeenWelcome", "true");
+            setShowWelcome(false);
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      )}
+
+      {/* HTML Loader shown on top of the canvas while loading */}
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white">
+          <Loader text="Loading Simulation..." />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
+
+      {showNewComponent && (
+        <>
+          <PopUp text={showNewComponent} />
+        </>
+      )}
+
+      <Canvas
+        style={{ width: '100%', height: '100%' }}
+        onCreated={() => setIsLoading(false)} // Hides HTML loader once WebGL is ready
+      >
+        <ambientLight intensity={0.5} />
+        <directionalLight
+          position={[15, 20, 10]}
+          intensity={1.5}
+          castShadow
+        />
+
+        {/* Fill Light (Softens harsh dark shadows on the opposite side) */}
+        <directionalLight
+          position={[-15, 10, -10]}
+          intensity={0.4}
+        />
+
+        <Cloud />
+        {/* Render model directly without inside-canvas Suspense HTML */}
+        <FoxModel isSmallSize={isSmallSize} />
+        <Plane isSmallSize={isSmallSize} isRotating={isRotating} />
+
+        <ContactShadows
+          position={[0, -2, 0]}
+          opacity={0.6}
+          scale={40}
+          blur={2}
+          far={10}
+        />
+
+        <OrbitControls
+          ref={controlsRef}
+          enablePan={false}
+          enableZoom={false}
+          minPolarAngle={Math.PI / 2.2}
+          maxPolarAngle={Math.PI / 2.2}
+          rotateSpeed={0.3}
+          dampingFactor={0.1}
+          onChange={handleOrbitChange}
+        />
+      </Canvas>
     </div>
-  );
+  )
 }
