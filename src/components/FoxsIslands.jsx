@@ -2,18 +2,24 @@
 "use client"
 
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useThree } from "@react-three/fiber";
 
 const FoxModel = ({ isSmallSize, ...props }) => {
     const { scene } = useGLTF("/models/foxs_islands.glb");
-    const ref = useRef();
+    const { viewport } = useThree();
 
-    useFrame((_, delta) => {
-        // ref.current.rotation.y += delta * 0.2;
-    });
+    const scale = Math.min(
+        0.1,
+        Math.max(0.05, viewport.width * 0.01)
+    );
 
-    return <primitive ref={ref} object={scene} scale={isSmallSize ? (0.05) : (0.1)} {...props} />;
-}
+    return (
+        <primitive
+            object={scene}
+            scale={scale}
+            {...props}
+        />
+    );
+};
 
-export default FoxModel
+export default FoxModel;

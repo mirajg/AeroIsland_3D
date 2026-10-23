@@ -105,7 +105,7 @@ export default function Page() {
                                 About Me
                             </p>
 
-                            <h1 className="max-w-4xl text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
+                            <h1 className="max-w-4xl text-[clamp(1.75rem,7vw,4.5rem)] font-black leading-[0.95] tracking-tight">
                                 I BUILD
                                 <br />
                                 <span className="text-cyan-400">DIGITAL</span>
@@ -392,14 +392,14 @@ export default function Page() {
                                     My Philosophy
                                 </p>
 
-                                <blockquote className="mt-6 text-3xl font-black leading-tight md:text-5xl">
+                                <blockquote className="mt-6 text-[clamp(1.75rem,5vw,3rem)] font-black leading-tight">
                                     &quot;I don&apos;t want to just{" "}
                                     <span className="text-cyan-400">use technology.</span>
                                     <br />
                                     I want to understand it.&quot;
                                 </blockquote>
 
-                                <p className="mt-8 max-w-2xl leading-8 text-white/45">
+                                <p className="mt-8 max-w-2xl text-[clamp(0.95rem,2.5vw,1.125rem)] leading-relaxed text-white/45">
                                     Every project is an opportunity to learn something new.
                                     Whether it&apos;s understanding how authentication works,
                                     creating a 3D interaction, or solving a difficult programming
@@ -416,7 +416,7 @@ export default function Page() {
                             What&apos;s Next?
                         </p>
 
-                        <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black md:text-6xl">
+                        <h2 className="mx-auto mt-5 max-w-3xl text-[clamp(0.95rem,2.5vw,1.125rem)] font-black">
                             LET&apos;S BUILD
                             <br />
                             SOMETHING <span className="text-cyan-400">INTERESTING.</span>
